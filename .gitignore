@@ -2,6 +2,8 @@
 out/
 sola.txt
 
+gradle/
+/gradlew*
 .gradle
 /build/
 
