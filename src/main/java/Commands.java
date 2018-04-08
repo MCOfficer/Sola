@@ -70,7 +70,7 @@ public class Commands {
         catch (IOException e) {
             e.printStackTrace();
         }
-        System.exit(1337);
+        System.exit(133);
     }
 
     public void onStopCommand(Guild guild, TextChannel channel) {
