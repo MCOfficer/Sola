@@ -77,7 +77,7 @@ public class Commands {
 
             @Override
             public void noMatches() {
-                channel.sendMessage("Couldn't find anything for `" + query.substring(9) + "`!").queue();
+                channel.sendMessage("Couldn't find any streams for `" + query.substring(9) + "`!").queue();
             }
 
             @Override

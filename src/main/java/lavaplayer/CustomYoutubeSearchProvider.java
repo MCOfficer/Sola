@@ -1,13 +1,11 @@
 package lavaplayer;
 
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.tools.DataFormatTools;
 import com.sedmelluq.discord.lavaplayer.tools.ExceptionTools;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpClientTools;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterface;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterfaceManager;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
-import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -38,27 +36,48 @@ public class CustomYoutubeSearchProvider extends com.sedmelluq.discord.lavaplaye
     }
 
     public AudioItem loadSearchResult(String query) {
+        List<AudioTrack> tracks = new ArrayList<>();
+        String nextPage = "";
+
         log.debug("Performing a search with query {}", query);
 
-        try (HttpInterface httpInterface = httpInterfaceManager.getInterface()) {
-            URI url = new URIBuilder("https://www.youtube.com/results").addParameter("search_query", query).build();
+        for(int i = 1; i <= 5; i++) {
 
-            try (CloseableHttpResponse response = httpInterface.execute(new HttpGet(url))) {
-                int statusCode = response.getStatusLine().getStatusCode();
-                if (statusCode != 200) {
-                    throw new IOException("Invalid status code for search response: " + statusCode);
+            try (HttpInterface httpInterface = httpInterfaceManager.getInterface()) {
+                URI url;
+                if (i == 1)
+                    url = new URIBuilder("https://www.youtube.com/results").addParameter("search_query", query).build();
+                else
+                    url = new URI("https://www.youtube.com" + nextPage);
+                try (CloseableHttpResponse response = httpInterface.execute(new HttpGet(url))) {
+                    int statusCode = response.getStatusLine().getStatusCode();
+                    if (statusCode != 200) {
+                        throw new IOException("Invalid status code for search response: " + statusCode);
+                    }
+
+                    Document document = Jsoup.parse(response.getEntity().getContent(), StandardCharsets.UTF_8.name(), "");
+                    extractSearchResults(tracks, document, query);
+
+                    if(tracks.size() >= 10) break;
+                    log.debug("Not enough results, continuing on page " + (i + 1));
+                    for(Element button : document.select("#page > #content .yt-uix-button-default > span")) {
+                        if (button.text().equals(String.valueOf(i + 1))) {
+                            nextPage = button.parent().attr("href");
+                            break;
+                        }
+                    }
+
                 }
-
-                Document document = Jsoup.parse(response.getEntity().getContent(), StandardCharsets.UTF_8.name(), "");
-                return extractSearchResults(document, query);
+            } catch (Exception e) {
+                throw ExceptionTools.wrapUnfriendlyExceptions(e);
             }
-        } catch (Exception e) {
-            throw ExceptionTools.wrapUnfriendlyExceptions(e);
         }
+        if(tracks.isEmpty())
+            return null; //If we didn't find anything, return null to trigger noMatches()
+        return new BasicAudioPlaylist("Search results for: " + query, tracks, null, true);
     }
 
-    private AudioItem extractSearchResults(Document document, String query) {
-        List<AudioTrack> tracks = new ArrayList<>();
+    private void extractSearchResults(List<AudioTrack> tracks, Document document, String query) {
 
         for (Element results : document.select("#page > #content #results")) {
             for (Element result : results.select(".yt-lockup-video")) {
@@ -67,12 +86,6 @@ public class CustomYoutubeSearchProvider extends com.sedmelluq.discord.lavaplaye
                 }
             }
         }
-
-        if (tracks.isEmpty()) {
-            return AudioReference.NO_TRACK;
-        } else {
-            return new BasicAudioPlaylist("Search results for: " + query, tracks, null, true);
-        }
     }
 
     private void extractTrackFromResultEntry(List<AudioTrack> tracks, Element element) {
@@ -80,12 +93,13 @@ public class CustomYoutubeSearchProvider extends com.sedmelluq.discord.lavaplaye
         Element contentElement = element.select(".yt-lockup-content").first();
         String videoId = element.attr("data-context-item-id");
 
-        boolean isStream = durationElement == null;
-        long duration =  isStream ? Long.MAX_VALUE :DataFormatTools.durationTextToMillis(durationElement.text());
+        if (durationElement == null) {
+            long duration = Long.MAX_VALUE;
 
-        String title = contentElement.select(".yt-lockup-title > a").text();
-        String author = contentElement.select(".yt-lockup-byline > a").text();
+            String title = contentElement.select(".yt-lockup-title > a").text();
+            String author = contentElement.select(".yt-lockup-byline > a").text();
 
-        tracks.add(sourceManager.buildTrackObject(videoId, title, author, isStream, duration));
+            tracks.add(sourceManager.buildTrackObject(videoId, title, author, true, duration));
+        }
     }
 }
