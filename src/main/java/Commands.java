@@ -102,12 +102,16 @@ public class Commands {
 
     public void displaySearchResult(AudioPlaylist playlist, TextChannel channel) {
         List<AudioTrack> results = playlist.getTracks();
-        OrderedMenu.Builder builder = new OrderedMenu.Builder()
-                .setSelection((message, integer) -> startTrack(results.get(integer - 1), channel))
-                .setEventWaiter(eventWaiter)
-                .setDescription("**I could find the following streams:**");
-        results.forEach(audioTrack -> builder.addChoice(audioTrack.getInfo().title));
-        builder.build().display(channel);
+        if (results.size() > 1) {
+            OrderedMenu.Builder builder = new OrderedMenu.Builder()
+                    .setSelection((message, integer) -> startTrack(results.get(integer - 1), channel))
+                    .setEventWaiter(eventWaiter)
+                    .setDescription("**I could find the following streams:**");
+            results.forEach(audioTrack -> builder.addChoice(audioTrack.getInfo().title));
+            builder.build().display(channel);
+        }
+        else
+            startTrack(results.get(0), channel);
     }
 
     private void joinVoiceChannel(Guild guild, Member member) {
