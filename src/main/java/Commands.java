@@ -10,9 +10,11 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import lavaplayer.AudioPlayerSendHandler;
 import lavaplayer.CustomYoutubeAudioSourceManager;
+import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.managers.AudioManager;
 
+import java.awt.*;
 import java.util.List;
 
 
@@ -92,7 +94,12 @@ public class Commands {
     public void startTrack(AudioTrack track, TextChannel channel) {
         if (track.getInfo().isStream) {
             player.startTrack(track, false);
-            channel.sendMessage("Now Playing \"" + track.getInfo().title + "\" by " + track.getInfo().author + ".").queue();
+            EmbedBuilder eb = new EmbedBuilder()
+                    .setThumbnail("https://i.ytimg.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg")
+                    .setDescription("Now Playing\n**\"" + track.getInfo().title + "\"**[\uD83D\uDD17 ](" + track.getInfo().uri + ")\nby " + track.getInfo().author + ".")
+                    .setColor(new Color(245, 245, 245));
+
+            channel.sendMessage(eb.build()).queue();
             channel.getJDA().getPresence().setGame(Game.playing(track.getInfo().title));
         }
         else {
@@ -106,8 +113,9 @@ public class Commands {
             OrderedMenu.Builder builder = new OrderedMenu.Builder()
                     .setSelection((message, integer) -> startTrack(results.get(integer - 1), channel))
                     .setEventWaiter(eventWaiter)
-                    .setDescription("**I could find the following streams:**");
-            results.forEach(audioTrack -> builder.addChoice(audioTrack.getInfo().title));
+                    .setDescription("**I could find the following streams:**")
+                    .setColor(new Color(245, 245, 245));
+            results.forEach(audioTrack -> builder.addChoice(audioTrack.getInfo().title + "\n"));
             builder.build().display(channel);
         }
         else
