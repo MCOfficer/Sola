@@ -27,6 +27,7 @@ public class Commands {
     private final AudioPlayerManager playerManager;
     private final AudioPlayer player;
     private final EventWaiter eventWaiter;
+    private final Color color = new Color(251, 252, 254);
 
     public Commands(EventWaiter eventWaiter) {
         playerManager = new DefaultAudioPlayerManager();
@@ -114,7 +115,7 @@ public class Commands {
             EmbedBuilder eb = new EmbedBuilder()
                     .setThumbnail("https://i.ytimg.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg")
                     .setDescription("Now Playing\n**\"" + track.getInfo().title + "\"**[\uD83D\uDD17 ](" + track.getInfo().uri + ")\nby " + track.getInfo().author + ".")
-                    .setColor(new Color(245, 245, 245));
+                    .setColor(color);
 
             channel.sendMessage(eb.build()).queue();
             channel.getJDA().getPresence().setGame(Game.playing(track.getInfo().title));
@@ -131,7 +132,7 @@ public class Commands {
                     .setSelection((message, integer) -> startTrack(results.get(integer - 1), channel))
                     .setEventWaiter(eventWaiter)
                     .setDescription("**I could find the following streams:**")
-                    .setColor(new Color(245, 245, 245));
+                    .setColor(color);
             results.forEach(audioTrack -> builder.addChoice(audioTrack.getInfo().title + "\n"));
             builder.build().display(channel);
         }
