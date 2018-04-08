@@ -1,8 +1,9 @@
+import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
+import com.jagrosh.jdautilities.menu.OrderedMenu;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
@@ -12,17 +13,21 @@ import lavaplayer.CustomYoutubeAudioSourceManager;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.managers.AudioManager;
 
+import java.util.ArrayList;
+
 
 public class Commands {
 
     private final AudioPlayerManager playerManager;
     private final AudioPlayer player;
+    private final EventWaiter eventWaiter;
 
-    public Commands() {
+    public Commands(EventWaiter eventWaiter) {
         playerManager = new DefaultAudioPlayerManager();
         playerManager.registerSourceManager(new CustomYoutubeAudioSourceManager(true));
         playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
         player = playerManager.createPlayer();
+        this.eventWaiter = eventWaiter;
     }
 
     public void onHelpCommand(TextChannel channel) {
@@ -67,11 +72,7 @@ public class Commands {
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
                 if(playlist.isSearchResult())
-                    for (AudioTrack track : playlist.getTracks())
-                        if (track.getInfo().isStream) {
-                            startTrack(track, channel);
-                            break;
-                        }
+                    displaySearchResult(playlist, channel);
             }
 
             @Override
@@ -97,6 +98,18 @@ public class Commands {
         else {
             channel.sendMessage("Feed me with Lifestreams, not just lame Tracks ;-;").queue();
         }
+    }
+
+    public void displaySearchResult(AudioPlaylist playlist, TextChannel channel) {
+        ArrayList<AudioTrack> results = new ArrayList<>();
+
+        results.addAll(playlist.getTracks().subList(0, 10));
+        OrderedMenu.Builder builder = new OrderedMenu.Builder()
+                .setSelection((message, integer) -> startTrack(results.get(integer - 1), channel))
+                .setEventWaiter(eventWaiter)
+                .setDescription("**I could find the following streams:**");
+        results.forEach(audioTrack -> builder.addChoice(audioTrack.getInfo().title));
+        builder.build().display(channel);
     }
 
     private void joinVoiceChannel(Guild guild, Member member) {

@@ -1,3 +1,4 @@
+import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
@@ -15,17 +16,20 @@ public class Main extends ListenerAdapter {
 
     public final static String prefix = "-";
     Commands commands;
+    EventWaiter eventWaiter;
 
     public static void main(String[] args) {
         new Main();
     }
 
     public Main() {
-        commands = new Commands();
+        eventWaiter = new EventWaiter();
+        commands = new Commands(eventWaiter);
         try {
             BufferedReader br = new BufferedReader(new FileReader("sola.txt"));
             JDA jda = new JDABuilder(AccountType.BOT)
                     .setToken(br.readLine())
+                    .addEventListener(eventWaiter)
                     .buildBlocking();
             br.close();
             jda.addEventListener(this);
