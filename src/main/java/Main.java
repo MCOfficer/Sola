@@ -43,8 +43,9 @@ public class Main extends ListenerAdapter {
             jda.getTextChannelById(channelId).sendMessage("...Done").queue();
         }
         catch (LoginException | InterruptedException | IOException e) {
-            e.printStackTrace();
-        }
+            if(!e.getMessage().equals(".solarestart"))
+                e.printStackTrace();
+            }
     }
 
     @Override
