@@ -7,6 +7,7 @@ import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceMan
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import lavaplayer.AudioPlayerSendHandler;
 import lavaplayer.CustomYoutubeAudioSourceManager;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.managers.AudioManager;
