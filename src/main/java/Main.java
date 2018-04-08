@@ -10,6 +10,9 @@ import javax.security.auth.login.LoginException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 public class Main extends ListenerAdapter {
@@ -34,6 +37,10 @@ public class Main extends ListenerAdapter {
             br.close();
             jda.addEventListener(this);
             jda.getPresence().setGame(Game.playing(prefix + "help | Hosted by M*C*O"));
+            Path file = Paths.get(".solarestart");
+            String channelId = Files.readAllLines(file).get(0);
+            Files.delete(file);
+            jda.getTextChannelById(channelId).sendMessage("...Done").queue();
         }
         catch (LoginException | InterruptedException | IOException e) {
             e.printStackTrace();
@@ -61,6 +68,8 @@ public class Main extends ListenerAdapter {
                 commands.onStopCommand(guild, channel);
             else if (args[0].equalsIgnoreCase(prefix + "ping"))
                 commands.onPingCommand(channel);
+            else if (args[0].equalsIgnoreCase(prefix + "update"))
+                commands.onUpdateCommand(channel);
         }
         catch (Exception e) {
             e.printStackTrace();

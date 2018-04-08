@@ -15,6 +15,10 @@ import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.managers.AudioManager;
 
 import java.awt.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 
@@ -38,8 +42,9 @@ public class Commands {
                 "The following Commands are available:\n\n" +
                 "`-help` : Displays this Message.\n" +
                 "`-ping` : Shows the time of the last Hearbeat in ms, which is roughly my Ping.\n" +
-                "`-stop` : Stops Playback and disconnects from the Voice Channel.\n" +
                 "`-play <query>` : Plays the lifestream <query>, where <query> can be a link or a search term.\n" +
+                "`-stop` : Stops Playback and disconnects from the Voice Channel.\n" +
+                "`-update` : Makes me restart and perform an auto-update.\n" +
                 "\nIf you require assistance, please contact M\\*C\\*O#9635!"
         ).queue();
     }
@@ -54,6 +59,18 @@ public class Commands {
             query = "ytsearch:" + query;
         joinVoiceChannel(guild, member);
         loadAndPlay(query, channel);
+    }
+
+    public void onUpdateCommand(TextChannel channel) {
+        channel.sendMessage("Restarting...").complete();
+        try {
+            Path file = Paths.get(".solarestart");
+            Files.write(file, channel.getId().getBytes());
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.exit(1337);
     }
 
     public void onStopCommand(Guild guild, TextChannel channel) {
