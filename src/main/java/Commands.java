@@ -103,7 +103,12 @@ public class Commands {
     public void displaySearchResult(AudioPlaylist playlist, TextChannel channel) {
         ArrayList<AudioTrack> results = new ArrayList<>();
 
-        results.addAll(playlist.getTracks().subList(0, 10));
+        for(AudioTrack track : playlist.getTracks())
+            if(track.getInfo().isStream) {
+                results.add(track);
+                if (results.size() == 10)
+                    break;
+            }
         OrderedMenu.Builder builder = new OrderedMenu.Builder()
                 .setSelection((message, integer) -> startTrack(results.get(integer - 1), channel))
                 .setEventWaiter(eventWaiter)
