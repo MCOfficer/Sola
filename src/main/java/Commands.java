@@ -13,7 +13,7 @@ import lavaplayer.CustomYoutubeAudioSourceManager;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.managers.AudioManager;
 
-import java.util.ArrayList;
+import java.util.List;
 
 
 public class Commands {
@@ -101,14 +101,7 @@ public class Commands {
     }
 
     public void displaySearchResult(AudioPlaylist playlist, TextChannel channel) {
-        ArrayList<AudioTrack> results = new ArrayList<>();
-
-        for(AudioTrack track : playlist.getTracks())
-            if(track.getInfo().isStream) {
-                results.add(track);
-                if (results.size() == 10)
-                    break;
-            }
+        List<AudioTrack> results = playlist.getTracks();
         OrderedMenu.Builder builder = new OrderedMenu.Builder()
                 .setSelection((message, integer) -> startTrack(results.get(integer - 1), channel))
                 .setEventWaiter(eventWaiter)
