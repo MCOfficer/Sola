@@ -28,6 +28,7 @@ public class Commands {
     private final AudioPlayer player;
     private final EventWaiter eventWaiter;
     private final Color color = new Color(251, 252, 254);
+    private TextChannel channel;
 
     public Commands(EventWaiter eventWaiter) {
         playerManager = new DefaultAudioPlayerManager();
@@ -55,11 +56,13 @@ public class Commands {
     }
 
     public void onPlayCommand(Guild guild, TextChannel channel, Member member, String[] args) {
-        String query = String.join(" ", args);
-        if (!query.toLowerCase().startsWith("http://") && !query.toLowerCase().startsWith("https://"))
-            query = "ytsearch:" + query;
-        joinVoiceChannel(guild, member);
-        loadAndPlay(query, channel);
+        if(!isConnected(guild.getAudioManager()) || channel == this.channel) {
+            String query = String.join(" ", args);
+            if (!query.toLowerCase().startsWith("http://") && !query.toLowerCase().startsWith("https://"))
+                query = "ytsearch:" + query;
+            joinVoiceChannel(channel, member);
+            loadAndPlay(query, channel);
+        }
     }
 
     public void onUpdateCommand(TextChannel channel) {
@@ -75,11 +78,14 @@ public class Commands {
     }
 
     public void onStopCommand(Guild guild, TextChannel channel) {
-        player.stopTrack();
-        AudioManager am = guild.getAudioManager();
-        String voiceName = am.getConnectedChannel().getName();
-        guild.getAudioManager().closeAudioConnection();
-        channel.sendMessage("Stopped Playback and disconnected from channel " + voiceName + ".").queue();
+        if(isConnected(guild.getAudioManager()) && channel == this.channel) {
+            player.stopTrack();
+            AudioManager am = guild.getAudioManager();
+            String voiceName = am.getConnectedChannel().getName();
+            guild.getAudioManager().closeAudioConnection();
+            channel.sendMessage("Unbound " + channel.getAsMention() + " and disconnected from channel " + voiceName + ".").queue();
+            this.channel = null;
+        }
     }
 
     public void loadAndPlay(String query, TextChannel channel) {
@@ -140,11 +146,14 @@ public class Commands {
             startTrack(results.get(0), channel);
     }
 
-    private void joinVoiceChannel(Guild guild, Member member) {
-        AudioManager am = guild.getAudioManager();
-        if(!am.isConnected() && !am.isAttemptingToConnect() && member.getVoiceState().getChannel() != null) {
+    private void joinVoiceChannel(TextChannel channel, Member member) {
+        AudioManager am = channel.getGuild().getAudioManager();
+        if(!isConnected(am) && member.getVoiceState().getChannel() != null) {
             am.setSendingHandler(new AudioPlayerSendHandler(player));
-            am.openAudioConnection(member.getVoiceState().getChannel());
+            VoiceChannel voice = member.getVoiceState().getChannel();
+            am.openAudioConnection(voice);
+            this.channel = channel;
+            channel.sendMessage("Joined " + voice.getName() + " and bound to " + channel.getAsMention()).queue();
         }
     }
 }
