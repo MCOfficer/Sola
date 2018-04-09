@@ -92,7 +92,7 @@ public class Commands {
         playerManager.loadItem(query, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                startTrack(track, channel);
+                startTrack(track, channel, false);
             }
 
             @Override
@@ -115,27 +115,28 @@ public class Commands {
         });
     }
 
-    public void startTrack(AudioTrack track, TextChannel channel) {
+    public void startTrack(AudioTrack track, TextChannel channel, boolean silent) {
         if (track.getInfo().isStream) {
             player.startTrack(track, false);
-            EmbedBuilder eb = new EmbedBuilder()
-                    .setThumbnail("https://i.ytimg.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg")
-                    .setDescription("Now Playing\n**\"" + track.getInfo().title + "\"**[\uD83D\uDD17 ](" + track.getInfo().uri + ")\nby " + track.getInfo().author + ".")
-                    .setColor(color);
+            if(!silent) {
+                EmbedBuilder eb = new EmbedBuilder()
+                        .setThumbnail("https://i.ytimg.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg")
+                        .setDescription("Now Playing\n**\"" + track.getInfo().title + "\"**[\uD83D\uDD17 ](" + track.getInfo().uri + ")\nby " + track.getInfo().author + ".")
+                        .setColor(color);
 
-            channel.sendMessage(eb.build()).queue();
-            channel.getJDA().getPresence().setGame(Game.playing(track.getInfo().title));
+                channel.sendMessage(eb.build()).queue();
+                channel.getJDA().getPresence().setGame(Game.playing(track.getInfo().title));
+            }
         }
-        else {
+        else if (!silent)
             channel.sendMessage("Feed me with Lifestreams, not just lame Tracks ;-;").queue();
-        }
     }
 
     public void displaySearchResult(AudioPlaylist playlist, TextChannel channel) {
         List<AudioTrack> results = playlist.getTracks().subList(0, playlist.getTracks().size() < 10 ? playlist.getTracks().size() : 10);
         if (results.size() > 1) {
             OrderedMenu.Builder builder = new OrderedMenu.Builder()
-                    .setSelection((message, integer) -> startTrack(results.get(integer - 1), channel))
+                    .setSelection((message, integer) -> startTrack(results.get(integer - 1), channel, false))
                     .setEventWaiter(eventWaiter)
                     .setDescription("**I could find the following streams:**")
                     .setColor(color);
@@ -143,7 +144,7 @@ public class Commands {
             builder.build().display(channel);
         }
         else
-            startTrack(results.get(0), channel);
+            startTrack(results.get(0), channel, false);
     }
 
     private void joinVoiceChannel(TextChannel channel, Member member) {
@@ -155,5 +156,17 @@ public class Commands {
             this.channel = channel;
             channel.sendMessage("Joined " + voice.getName() + " and bound to " + channel.getAsMention()).queue();
         }
+    }
+
+    private boolean isConnected(AudioManager audioManager) {
+        return audioManager.isConnected() || audioManager.isAttemptingToConnect();
+    }
+
+    public void onStreamEnd(AudioTrack track) {
+        channel.sendMessage("The Stream **" + track.getInfo().title + "** has ended, please select a new one.").queue();
+    }
+
+    public void onLoadFailed(AudioTrack track) {
+        channel.sendMessage("Couldn't load stream **" + track.getInfo().title + "**, perhaps it's being broadcasted with an unsupported codec.").queue();
     }
 }
