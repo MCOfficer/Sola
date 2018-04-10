@@ -17,9 +17,10 @@ import java.util.Arrays;
 
 public class Main extends ListenerAdapter {
 
-    public final static String prefix = "-";
+    final static String prefix = "-";
     Commands commands;
     EventWaiter eventWaiter;
+    JDA jda ;
 
     public static void main(String[] args) {
         new Main();
@@ -27,10 +28,10 @@ public class Main extends ListenerAdapter {
 
     public Main() {
         eventWaiter = new EventWaiter();
-        commands = new Commands(eventWaiter);
+        commands = new Commands(eventWaiter, this);
         try {
             BufferedReader br = new BufferedReader(new FileReader("sola.txt"));
-            JDA jda = new JDABuilder(AccountType.BOT)
+            jda = new JDABuilder(AccountType.BOT)
                     .setToken(br.readLine())
                     .addEventListener(eventWaiter)
                     .buildBlocking();
@@ -70,7 +71,7 @@ public class Main extends ListenerAdapter {
             else if (args[0].equalsIgnoreCase(prefix + "ping"))
                 commands.onPingCommand(channel);
             else if (args[0].equalsIgnoreCase(prefix + "update"))
-                commands.onUpdateCommand(channel);
+                commands.onUpdateCommand(channel, author);
         }
         catch (Exception e) {
             e.printStackTrace();

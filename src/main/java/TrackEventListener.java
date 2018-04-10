@@ -17,9 +17,9 @@ public class TrackEventListener extends AudioEventAdapter {
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         if(endReason == AudioTrackEndReason.FINISHED)
-            commands.onStreamEnd(track, wrapper.channel);
+            commands.onStreamEnd(track, wrapper.channelId);
         if(endReason == AudioTrackEndReason.LOAD_FAILED)
-            commands.onLoadFailed(track, wrapper.channel);
+            commands.onLoadFailed(track, wrapper.channelId);
     }
 
     @Override

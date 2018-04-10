@@ -2,6 +2,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import lavaplayer.AudioPlayerSendHandler;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.VoiceChannel;
@@ -9,16 +10,15 @@ import net.dv8tion.jda.core.managers.AudioManager;
 
 public class GuildAudioWrapper {
 
-    //TODO: instead of straight up storing objects, store IDs
-    public final Guild guild;
+    public final String guildId;
     public final AudioManager audioManager;
     public AudioTrack track;
     public final AudioPlayer player;
-    public TextChannel channel = null;
+    public String channelId;
     public final Commands commands;
 
     public GuildAudioWrapper(Guild guild, Commands commands, AudioPlayerManager playerManager) {
-        this.guild = guild;
+        guildId = guild.getId();
         this.commands = commands;
         this.player = playerManager.createPlayer();
         player.addListener(new TrackEventListener(this));
@@ -28,7 +28,7 @@ public class GuildAudioWrapper {
     public void connect(VoiceChannel voice, TextChannel bindTo) {
         audioManager.setSendingHandler(new AudioPlayerSendHandler(player));
         audioManager.openAudioConnection(voice);
-        channel = bindTo;
+        channelId = bindTo.getId();
     }
 
     public void play(AudioTrack track) {
@@ -36,9 +36,9 @@ public class GuildAudioWrapper {
         player.startTrack(track, false);
     }
 
-    public void stop() {
+    public void stop(JDA jda) {
         track = null;
-        guild.getAudioManager().closeAudioConnection();
+        jda.getGuildById(guildId).getAudioManager().closeAudioConnection();
     }
 
     public boolean isConnected() {

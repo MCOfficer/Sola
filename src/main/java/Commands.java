@@ -24,14 +24,16 @@ public class Commands {
 
     private final AudioPlayerManager playerManager;
     private final EventWaiter eventWaiter;
+    private final Main main;
     private final Color color = new Color(251, 252, 254);
     private HashMap<Guild, GuildAudioWrapper> guildAudioWrappers = new HashMap<>();
 
-    public Commands(EventWaiter eventWaiter) {
+    public Commands(EventWaiter eventWaiter, Main main) {
         playerManager = new DefaultAudioPlayerManager();
         playerManager.registerSourceManager(new CustomYoutubeAudioSourceManager(true));
         playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
         this.eventWaiter = eventWaiter;
+        this.main = main;
     }
 
     public void onHelpCommand(TextChannel channel) {
@@ -59,7 +61,7 @@ public class Commands {
             wrapper = new GuildAudioWrapper(guild, this, playerManager);
             guildAudioWrappers.put(guild, wrapper);
         }
-        if( (!wrapper.isConnected() || channel == wrapper.channel)) {
+        if( (!wrapper.isConnected() || channel.getId().equals(wrapper.channelId))) {
             String query = String.join(" ", args);
             if (!query.toLowerCase().startsWith("http://") && !query.toLowerCase().startsWith("https://"))
                 query = "ytsearch:" + query;
@@ -84,9 +86,9 @@ public class Commands {
     public void onStopCommand(Guild guild, TextChannel channel) {
         //TODO: use embed
         GuildAudioWrapper wrapper = guildAudioWrappers.get(guild);
-        if(wrapper.isConnected() && channel == wrapper.channel) {
+        if(wrapper.isConnected() && channel.getId().equals(wrapper.channelId)) {
             String voiceName = guild.getAudioManager().getConnectedChannel().getName();
-            wrapper.stop();
+            wrapper.stop(channel.getJDA());
             guildAudioWrappers.remove(guild);
             channel.sendMessage("Unbound " + channel.getAsMention() + " and disconnected from channel " + voiceName + ".").queue();
         }
@@ -158,11 +160,11 @@ public class Commands {
         }
     }
 
-    public void onStreamEnd(AudioTrack track, TextChannel channel) {
-        channel.sendMessage("The Stream **" + track.getInfo().title + "** has ended, please select a new one.").queue();
+    public void onStreamEnd(AudioTrack track, String channelId) {
+        main.jda.getTextChannelById(channelId).sendMessage("The Stream **" + track.getInfo().title + "** has ended, please select a new one.").queue();
     }
 
-    public void onLoadFailed(AudioTrack track, TextChannel channel) {
-        channel.sendMessage("Couldn't load stream **" + track.getInfo().title + "**, perhaps it's being broadcasted with an unsupported codec.").queue();
+    public void onLoadFailed(AudioTrack track, String channelId) {
+        main.jda.getTextChannelById(channelId).sendMessage("Couldn't load stream **" + track.getInfo().title + "**, perhaps it's being broadcasted with an unsupported codec.").queue();
     }
 }
