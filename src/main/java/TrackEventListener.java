@@ -8,6 +8,7 @@ public class TrackEventListener extends AudioEventAdapter {
 
     public final GuildAudioWrapper wrapper;
     public final Commands commands;
+    private int retries = 0;
 
     public TrackEventListener(GuildAudioWrapper wrapper) {
         this.wrapper = wrapper;
@@ -19,7 +20,15 @@ public class TrackEventListener extends AudioEventAdapter {
         if(endReason == AudioTrackEndReason.FINISHED)
             commands.onStreamEnd(track, wrapper.channelId);
         if(endReason == AudioTrackEndReason.LOAD_FAILED)
-            commands.onLoadFailed(track, wrapper.channelId);
+            if (retries > 5) {
+            commands.startTrack(track, null, true);
+            retries++;
+            }
+            else {
+                commands.onLoadFailed(track, wrapper.channelId);
+                retries = 0;
+            }
+
     }
 
     @Override
