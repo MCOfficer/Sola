@@ -36,7 +36,7 @@ public class Main extends ListenerAdapter {
                     .buildBlocking();
             br.close();
             jda.addEventListener(this);
-            jda.getPresence().setGame(Game.playing(prefix + "help | Hosted by M*C*O"));
+            jda.getPresence().setGame(Game.playing(prefix + "help"));
             Path file = Paths.get(".solarestart");
             String channelId = Files.readAllLines(file).get(0);
             Files.delete(file);

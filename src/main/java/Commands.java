@@ -1,45 +1,41 @@
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import com.jagrosh.jdautilities.menu.OrderedMenu;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import lavaplayer.AudioPlayerSendHandler;
 import lavaplayer.CustomYoutubeAudioSourceManager;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.managers.AudioManager;
 
 import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 
 
 public class Commands {
 
     private final AudioPlayerManager playerManager;
-    private final AudioPlayer player;
     private final EventWaiter eventWaiter;
     private final Color color = new Color(251, 252, 254);
-    private TextChannel channel;
+    private HashMap<Guild, GuildAudioWrapper> guildAudioWrappers = new HashMap<>();
 
     public Commands(EventWaiter eventWaiter) {
         playerManager = new DefaultAudioPlayerManager();
         playerManager.registerSourceManager(new CustomYoutubeAudioSourceManager(true));
         playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
-        player = playerManager.createPlayer();
-        player.addListener(new TrackEventListener(this));
         this.eventWaiter = eventWaiter;
     }
 
     public void onHelpCommand(TextChannel channel) {
+        //TODO: use embed
         channel.sendMessage(
                 "**I'm Sola - a Bot created specifically for listening to livestreams.**\n" +
                 "The following Commands are available:\n\n" +
@@ -53,20 +49,28 @@ public class Commands {
     }
 
     public void onPingCommand(TextChannel channel) {
+        //TODO: use embed
         channel.sendMessage("Last Heartbeat took " + channel.getJDA().getPing() + "ms.").queue();
     }
 
     public void onPlayCommand(Guild guild, TextChannel channel, Member member, String[] args) {
-        if(!isConnected(guild.getAudioManager()) || channel == this.channel) {
+        //TODO dont do anything if the member isn't connected
+        GuildAudioWrapper wrapper = guildAudioWrappers.get(guild);
+        if (wrapper == null) {
+            wrapper = new GuildAudioWrapper(guild, this, playerManager);
+            guildAudioWrappers.put(guild, wrapper);
+        }
+        if(!wrapper.isConnected() || channel == wrapper.channel) {
             String query = String.join(" ", args);
             if (!query.toLowerCase().startsWith("http://") && !query.toLowerCase().startsWith("https://"))
                 query = "ytsearch:" + query;
-            joinVoiceChannel(channel, member);
+            joinVoiceChannel(channel, member, wrapper);
             loadAndPlay(query, channel);
         }
     }
 
     public void onUpdateCommand(TextChannel channel) {
+        //TODO: private command only for myself
         channel.sendMessage("Restarting...").complete();
         try {
             Path file = Paths.get(".solarestart");
@@ -79,13 +83,13 @@ public class Commands {
     }
 
     public void onStopCommand(Guild guild, TextChannel channel) {
-        if(isConnected(guild.getAudioManager()) && channel == this.channel) {
-            player.stopTrack();
-            AudioManager am = guild.getAudioManager();
-            String voiceName = am.getConnectedChannel().getName();
-            guild.getAudioManager().closeAudioConnection();
+        //TODO: use embed
+        GuildAudioWrapper wrapper = guildAudioWrappers.get(guild);
+        if(wrapper.isConnected() && channel == wrapper.channel) {
+            String voiceName = guild.getAudioManager().getConnectedChannel().getName();
+            wrapper.stop();
+            guildAudioWrappers.remove(guild);
             channel.sendMessage("Unbound " + channel.getAsMention() + " and disconnected from channel " + voiceName + ".").queue();
-            this.channel = null;
         }
     }
 
@@ -118,7 +122,7 @@ public class Commands {
 
     public void startTrack(AudioTrack track, TextChannel channel, boolean silent) {
         if (track.getInfo().isStream) {
-            player.startTrack(track, false);
+            guildAudioWrappers.get(channel.getGuild()).play(track);
             if(!silent) {
                 EmbedBuilder eb = new EmbedBuilder()
                         .setThumbnail("https://i.ytimg.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg")
@@ -126,7 +130,6 @@ public class Commands {
                         .setColor(color);
 
                 channel.sendMessage(eb.build()).queue();
-                channel.getJDA().getPresence().setGame(Game.playing(track.getInfo().title));
             }
         }
         else if (!silent)
@@ -148,26 +151,19 @@ public class Commands {
             startTrack(results.get(0), channel, false);
     }
 
-    private void joinVoiceChannel(TextChannel channel, Member member) {
-        AudioManager am = channel.getGuild().getAudioManager();
-        if(!isConnected(am) && member.getVoiceState().getChannel() != null) {
-            am.setSendingHandler(new AudioPlayerSendHandler(player));
-            VoiceChannel voice = member.getVoiceState().getChannel();
-            am.openAudioConnection(voice);
-            this.channel = channel;
+    private void joinVoiceChannel(TextChannel channel, Member member, GuildAudioWrapper wrapper) {
+        VoiceChannel voice = member.getVoiceState().getChannel();
+        if(!wrapper.isConnected() && voice != null) {
+            wrapper.connect(voice, channel);
             channel.sendMessage("Joined " + voice.getName() + " and bound to " + channel.getAsMention()).queue();
         }
     }
 
-    private boolean isConnected(AudioManager audioManager) {
-        return audioManager.isConnected() || audioManager.isAttemptingToConnect();
-    }
-
-    public void onStreamEnd(AudioTrack track) {
+    public void onStreamEnd(AudioTrack track, TextChannel channel) {
         channel.sendMessage("The Stream **" + track.getInfo().title + "** has ended, please select a new one.").queue();
     }
 
-    public void onLoadFailed(AudioTrack track) {
+    public void onLoadFailed(AudioTrack track, TextChannel channel) {
         channel.sendMessage("Couldn't load stream **" + track.getInfo().title + "**, perhaps it's being broadcasted with an unsupported codec.").queue();
     }
 }

@@ -6,18 +6,20 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 
 public class TrackEventListener extends AudioEventAdapter {
 
+    public final GuildAudioWrapper wrapper;
     public final Commands commands;
 
-    public TrackEventListener(Commands commands) {
-        this.commands = commands;
+    public TrackEventListener(GuildAudioWrapper wrapper) {
+        this.wrapper = wrapper;
+        this.commands = wrapper.commands;
     }
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         if(endReason == AudioTrackEndReason.FINISHED)
-            commands.onStreamEnd(track);
+            commands.onStreamEnd(track, wrapper.channel);
         if(endReason == AudioTrackEndReason.LOAD_FAILED)
-            commands.onLoadFailed(track);
+            commands.onLoadFailed(track, wrapper.channel);
     }
 
     @Override
