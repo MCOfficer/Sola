@@ -54,13 +54,13 @@ public class Commands {
     }
 
     public void onPlayCommand(Guild guild, TextChannel channel, Member member, String[] args) {
-        //TODO dont do anything if the member isn't connected
+        if (member.getVoiceState().getChannel() == null) return;
         GuildAudioWrapper wrapper = guildAudioWrappers.get(guild);
         if (wrapper == null) {
             wrapper = new GuildAudioWrapper(guild, this, playerManager);
             guildAudioWrappers.put(guild, wrapper);
         }
-        if(!wrapper.isConnected() || channel == wrapper.channel) {
+        if( (!wrapper.isConnected() || channel == wrapper.channel)) {
             String query = String.join(" ", args);
             if (!query.toLowerCase().startsWith("http://") && !query.toLowerCase().startsWith("https://"))
                 query = "ytsearch:" + query;
