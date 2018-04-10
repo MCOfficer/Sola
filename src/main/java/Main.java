@@ -17,7 +17,7 @@ import java.util.Arrays;
 
 public class Main extends ListenerAdapter {
 
-    final static String prefix = "sola";
+    final static String prefix = "sola ";
     Commands commands;
     EventWaiter eventWaiter;
     JDA jda ;
