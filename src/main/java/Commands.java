@@ -40,10 +40,9 @@ public class Commands {
                 "**I'm Sola - a Bot created specifically for listening to livestreams.**\n" +
                 "The following Commands are available:\n\n" +
                 "`-help` : Displays this Message.\n" +
-                "`-ping` : Shows the time of the last Hearbeat in ms, which is roughly my Ping.\n" +
+                "`-ping` : Shows the time of the last Hearbeat in ms, which is roughly my Ping.\n\n" +
                 "`-play <query>` : Plays the lifestream <query>, where <query> can be a link or a search term.\n" +
                 "`-stop` : Stops Playback and disconnects from the Voice Channel.\n" +
-                "`-update` : Makes me restart and perform an auto-update.\n" +
                 "\nIf you require assistance, please contact M\\*C\\*O#9635!"
         ).queue();
     }
@@ -69,8 +68,8 @@ public class Commands {
         }
     }
 
-    public void onUpdateCommand(TextChannel channel) {
-        //TODO: private command only for myself
+    public void onUpdateCommand(TextChannel channel, User author) {
+        if(!author.getId().equals("177733454824341505")) return;
         channel.sendMessage("Restarting...").complete();
         try {
             Path file = Paths.get(".solarestart");
