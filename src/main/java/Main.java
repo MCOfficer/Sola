@@ -17,7 +17,7 @@ import java.util.Arrays;
 
 public class Main extends ListenerAdapter {
 
-    final static String prefix = "-";
+    final static String prefix = "sola";
     Commands commands;
     EventWaiter eventWaiter;
     JDA jda ;
@@ -59,18 +59,19 @@ public class Main extends ListenerAdapter {
         Message message = event.getMessage();
         String content = message.getContentRaw();
         String[] args = content.split(" ");
-        String[] argsStripped = Arrays.copyOfRange(args, 1, args.length);
+        if (!args[0].equalsIgnoreCase("sola")) return;
+        String[] argsStripped = Arrays.copyOfRange(args, 2, args.length);
 
         try {
-            if (args[0].equalsIgnoreCase(prefix + "play"))
+            if (args[1].equalsIgnoreCase("play"))
                 commands.onPlayCommand(guild, channel, member, argsStripped);
-            else if (args[0].equalsIgnoreCase(prefix + "help"))
+            else if (args[1].equalsIgnoreCase("help"))
                 commands.onHelpCommand(channel);
-            else if (args[0].equalsIgnoreCase(prefix + "stop"))
+            else if (args[1].equalsIgnoreCase("stop"))
                 commands.onStopCommand(guild, channel);
-            else if (args[0].equalsIgnoreCase(prefix + "ping"))
+            else if (args[1].equalsIgnoreCase("ping"))
                 commands.onPingCommand(channel);
-            else if (args[0].equalsIgnoreCase(prefix + "update"))
+            else if (args[1].equalsIgnoreCase("update"))
                 commands.onUpdateCommand(channel, author);
         }
         catch (Exception e) {

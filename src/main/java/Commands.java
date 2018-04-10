@@ -40,11 +40,11 @@ public class Commands {
         //TODO: use embed
         channel.sendMessage(
                 "**I'm Sola - a Bot created specifically for listening to livestreams.**\n" +
-                "The following Commands are available:\n\n" +
-                "`-help` : Displays this Message.\n" +
-                "`-ping` : Shows the time of the last Hearbeat in ms, which is roughly my Ping.\n\n" +
-                "`-play <query>` : Plays the lifestream <query>, where <query> can be a link or a search term.\n" +
-                "`-stop` : Stops Playback and disconnects from the Voice Channel.\n" +
+                "My prefix is `sola`. The following Commands are available:\n\n" +
+                "`help` : Displays this Message.\n" +
+                "`ping` : Shows the time of the last Hearbeat in ms, which is roughly my Ping.\n\n" +
+                "`play <query>` : Plays the lifestream <query>, where <query> can be a link or a search term.\n" +
+                "`stop` : Stops Playback and disconnects from the Voice Channel.\n" +
                 "\nIf you require assistance, please contact M\\*C\\*O#9635!"
         ).queue();
     }
