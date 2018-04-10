@@ -35,6 +35,7 @@ public class Commands {
         playerManager.registerSourceManager(new CustomYoutubeAudioSourceManager(true));
         playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
         player = playerManager.createPlayer();
+        player.addListener(new TrackEventListener(this));
         this.eventWaiter = eventWaiter;
     }
 
