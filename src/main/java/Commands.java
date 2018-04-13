@@ -30,6 +30,7 @@ public class Commands {
 
     public Commands(EventWaiter eventWaiter, Main main) {
         playerManager = new DefaultAudioPlayerManager();
+        playerManager.setFrameBufferDuration(40);
         playerManager.registerSourceManager(new CustomYoutubeAudioSourceManager(true));
         playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
         this.eventWaiter = eventWaiter;
