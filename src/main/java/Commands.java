@@ -139,6 +139,7 @@ public class Commands {
     }
 
     public void displaySearchResult(AudioPlaylist playlist, TextChannel channel) {
+        channel.sendTyping().queue();
         List<AudioTrack> results = playlist.getTracks().subList(0, playlist.getTracks().size() < 10 ? playlist.getTracks().size() : 10);
         if (results.size() > 1) {
             OrderedMenu.Builder builder = new OrderedMenu.Builder()
