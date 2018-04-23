@@ -1,5 +1,6 @@
 # Sola
 A Discord Bot for listening to Livestreams.
+
 ![https://discord.gg/nKQdmBh](https://discordapp.com/api/guilds/194794824371535873/widget.png)
 [![Build Status](http://mcofficer.me:8080/job/Sola/badge/icon)](http://mcofficer.me:8080/job/Sola/)
 
