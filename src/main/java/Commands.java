@@ -77,8 +77,7 @@ public class Commands {
         if (wrapper.isConnected() && channel.getId().equals(wrapper.channelId)) {
             AudioTrack track = wrapper.track;
             EmbedBuilder eb = new EmbedBuilder()
-                    //TODO handle twitch thumbnails
-                    .setThumbnail("https://i.ytimg.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg")
+                    .setThumbnail(getThumbnail(track))
                     .setDescription("Currently Playing\n**\"" + track.getInfo().title + "\"**[\uD83D\uDD17 ](" + track.getInfo().uri + ")\nby " + track.getInfo().author + ".")
                     .setColor(color);
             channel.sendMessage(eb.build()).queue();
@@ -141,7 +140,7 @@ public class Commands {
             guildAudioWrappers.get(channel.getGuild()).play(track);
             if(!silent) {
                 EmbedBuilder eb = new EmbedBuilder()
-                        .setThumbnail("https://i.ytimg.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg")
+                        .setThumbnail(getThumbnail(track))
                         .setDescription("Now Playing\n**\"" + track.getInfo().title + "\"**[\uD83D\uDD17 ](" + track.getInfo().uri + ")\nby " + track.getInfo().author + ".")
                         .setColor(color);
                 channel.sendMessage(eb.build()).queue();
@@ -165,6 +164,11 @@ public class Commands {
         }
         else
             startTrack(results.get(0), channel, false);
+    }
+
+    private String getThumbnail(AudioTrack track) {
+        //TODO handle twitch thumbnails
+        return "https://i.ytimg.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg";
     }
 
     private void joinVoiceChannel(TextChannel channel, Member member, GuildAudioWrapper wrapper) {
