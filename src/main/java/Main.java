@@ -73,6 +73,8 @@ public class Main extends ListenerAdapter {
                 commands.onPingCommand(channel);
             else if (args[1].equalsIgnoreCase("update"))
                 commands.onUpdateCommand(channel, author);
+            else if (args[1].equalsIgnoreCase("current"))
+                commands.onCurrentCommand(guild, channel);
         }
         catch (Exception e) {
             e.printStackTrace();

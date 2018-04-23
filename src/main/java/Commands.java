@@ -43,6 +43,7 @@ public class Commands {
                 "**I'm Sola - a Bot created specifically for listening to livestreams.**\n" +
                 "My prefix is `sola`. The following Commands are available:\n\n" +
                 "`help` : Displays this Message.\n" +
+                "`current` : Shows the currently playing track.\n" +
                 "`ping` : Shows the time of the last Hearbeat in ms, which is roughly my Ping.\n\n" +
                 "`play <query>` : Plays the lifestream <query>, where <query> can be a link or a search term.\n" +
                 "`stop` : Stops Playback and disconnects from the Voice Channel.\n" +
@@ -68,6 +69,19 @@ public class Commands {
                 query = "ytsearch:" + query;
             joinVoiceChannel(channel, member, wrapper);
             loadAndPlay(query, channel);
+        }
+    }
+
+    public void onCurrentCommand(Guild guild, TextChannel channel) {
+        GuildAudioWrapper wrapper = guildAudioWrappers.get(guild);
+        if (wrapper.isConnected() && channel.getId().equals(wrapper.channelId)) {
+            AudioTrack track = wrapper.track;
+            EmbedBuilder eb = new EmbedBuilder()
+                    //TODO handle twitch thumbnails
+                    .setThumbnail("https://i.ytimg.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg")
+                    .setDescription("Currently Playing\n**\"" + track.getInfo().title + "\"**[\uD83D\uDD17 ](" + track.getInfo().uri + ")\nby " + track.getInfo().author + ".")
+                    .setColor(color);
+            channel.sendMessage(eb.build()).queue();
         }
     }
 
@@ -130,7 +144,6 @@ public class Commands {
                         .setThumbnail("https://i.ytimg.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg")
                         .setDescription("Now Playing\n**\"" + track.getInfo().title + "\"**[\uD83D\uDD17 ](" + track.getInfo().uri + ")\nby " + track.getInfo().author + ".")
                         .setColor(color);
-
                 channel.sendMessage(eb.build()).queue();
             }
         }
