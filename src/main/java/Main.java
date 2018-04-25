@@ -7,13 +7,13 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import javax.security.auth.login.LoginException;
-import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Properties;
 
 public class Main extends ListenerAdapter {
 
@@ -21,6 +21,7 @@ public class Main extends ListenerAdapter {
     Commands commands;
     EventWaiter eventWaiter;
     JDA jda ;
+    Properties properties = new Properties();
 
     public static void main(String[] args) {
         new Main();
@@ -30,14 +31,14 @@ public class Main extends ListenerAdapter {
         eventWaiter = new EventWaiter();
         commands = new Commands(eventWaiter, this);
         try {
-            BufferedReader br = new BufferedReader(new FileReader("sola.txt"));
+            properties.load(new FileReader("sola.txt"));
             jda = new JDABuilder(AccountType.BOT)
-                    .setToken(br.readLine())
+                    .setToken(properties.getProperty("token"))
                     .addEventListener(eventWaiter)
                     .buildBlocking();
-            br.close();
             jda.addEventListener(this);
             jda.getPresence().setGame(Game.playing(prefix + "help"));
+
             Path file = Paths.get(".solarestart");
             String channelId = Files.readAllLines(file).get(0);
             Files.delete(file);
