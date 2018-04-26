@@ -36,7 +36,7 @@ public class StatsUpdater implements Runnable {
 
         try {
             client.newCall(discordbotsOrg).execute();
-            client.newCall(botsDiscordPw).execute():
+            client.newCall(botsDiscordPw).execute();
         }
         catch (IOException e) {
             e.printStackTrace();
