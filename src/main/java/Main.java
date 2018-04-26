@@ -14,14 +14,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Main extends ListenerAdapter {
 
     final static String prefix = "sola ";
     Commands commands;
     EventWaiter eventWaiter;
-    JDA jda ;
+    JDA jda;
     Properties properties = new Properties();
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     public static void main(String[] args) {
         new Main();
@@ -38,6 +42,8 @@ public class Main extends ListenerAdapter {
                     .buildBlocking();
             jda.addEventListener(this);
             jda.getPresence().setGame(Game.playing(prefix + "help"));
+
+            scheduler.scheduleAtFixedRate(new StatsUpdater(this), 0, 6, TimeUnit.HOURS);
 
             Path file = Paths.get(".solarestart");
             String channelId = Files.readAllLines(file).get(0);
