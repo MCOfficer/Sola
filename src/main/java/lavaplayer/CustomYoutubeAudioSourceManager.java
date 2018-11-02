@@ -300,7 +300,8 @@ public class CustomYoutubeAudioSourceManager extends YoutubeAudioSourceManager {
         }
     }
 
-    public JsonBrowser getTrackInfoFromMainPage(HttpInterface httpInterface, String videoId, boolean mustExist) throws Exception {
+    @Override
+    public JsonBrowser getTrackInfoFromMainPage(HttpInterface httpInterface, String videoId, boolean mustExist) throws IOException {
         try (CloseableHttpResponse response = httpInterface.execute(new HttpGet(getWatchUrl(videoId)))) {
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode != 200) {
@@ -324,7 +325,7 @@ public class CustomYoutubeAudioSourceManager extends YoutubeAudioSourceManager {
         return getTrackInfoFromEmbedPage(httpInterface, videoId);
     }
 
-    private boolean determineFailureReason(HttpInterface httpInterface, String videoId, boolean mustExist) throws Exception {
+    private boolean determineFailureReason(HttpInterface httpInterface, String videoId, boolean mustExist) throws IOException {
         try (CloseableHttpResponse response = httpInterface.execute(new HttpGet("https://www.youtube.com/get_video_info?hl=en_GB&video_id=" + videoId))) {
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode != 200) {
@@ -351,13 +352,13 @@ public class CustomYoutubeAudioSourceManager extends YoutubeAudioSourceManager {
                 new IllegalStateException("Main page had no video, but video info has no error."));
     }
 
-    private JsonBrowser getTrackInfoFromEmbedPage(HttpInterface httpInterface, String videoId) throws Exception {
+    private JsonBrowser getTrackInfoFromEmbedPage(HttpInterface httpInterface, String videoId) throws IOException {
         JsonBrowser basicInfo = loadTrackBaseInfoFromEmbedPage(httpInterface, videoId);
         basicInfo.put("args", loadTrackArgsFromVideoInfoPage(httpInterface, videoId, basicInfo.get("sts").text()));
         return basicInfo;
     }
 
-    private JsonBrowser loadTrackBaseInfoFromEmbedPage(HttpInterface httpInterface, String videoId) throws Exception {
+    private JsonBrowser loadTrackBaseInfoFromEmbedPage(HttpInterface httpInterface, String videoId) throws IOException {
         try (CloseableHttpResponse response = httpInterface.execute(new HttpGet("https://www.youtube.com/embed/" + videoId))) {
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode != 200) {
@@ -376,7 +377,7 @@ public class CustomYoutubeAudioSourceManager extends YoutubeAudioSourceManager {
                 new IllegalStateException("Expected player config is not present in embed page."));
     }
 
-    private Map<String, String> loadTrackArgsFromVideoInfoPage(HttpInterface httpInterface, String videoId, String sts) throws Exception {
+    private Map<String, String> loadTrackArgsFromVideoInfoPage(HttpInterface httpInterface, String videoId, String sts) throws IOException {
         String url = "https://www.youtube.com/get_video_info?hl=en_GB&video_id=" + videoId + "&sts=" + sts;
 
         try (CloseableHttpResponse response = httpInterface.execute(new HttpGet(url))) {
